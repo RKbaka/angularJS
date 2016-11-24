@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myApp">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <script src="js/jquery-3.1.1.js"></script>
+    <script src="js/angular.js"></script>
+</head>
+<body ng-controller="demo">
+</body>
+<script>
+    var app=angular.module("myApp",[]);
+    app.controller("demo",function(){
+        var member=['top','par','marry','1234'];
+        angular.forEach(member,function(data,index){//循环数组的或对象
+            console.log(data);//数组的value
+            console.log(index);//数组的索引
+        })
+    })
+</script>
+</html>
