@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <script src="js/jquery-3.1.1.js"></script>
+    <script src="js/angular.js"></script>
+    <style>
+        body{
+            padding-top:20px;
+            padding-bottom:20px;
+            background:#f5f5f5;
+        }
+        input[type=checkbox]{
+            vertical-align: top;
+            margin-right:3px;
+        }
+        .todos{
+            max-width:550px;
+            padding:19px 29px 29px;
+            margin:0 auto 20px;
+            background:#fff;
+            border:1px solid #e5e5e5;
+            border-radius:8px;
+            box-shadow:0 1px 6px rgba(0,0,0,0.5);
+        }
+        .done-true .todo-text{
+            text-decoration: line-through;
+            color:gray;
+        }
+        .color{
+            position:absolute;
+            padding-left:3px;
+        }
+        .color li{
+            cursor:pointer;
+            width:10px;
+            height:10px;
+            margin-right:3px;
+            float:right;
+        }
+        li.color-1{
+            background:#b94a48;
+        }
+        li.color-2{
+            background:#c09853;
+        }
+        li.color-3{
+            background:#468847;
+        }
+        li.color-4{
+            background:#3a87ad;
+        }
+        .color-1{
+            color:#b94a48;
+            background:#f2dede;
+            border-color:#eed3d7;
+        }
+        .color-2{
+            color:#c09853;
+            background:#fcf8e3;
+            border-color:#fbeed5;
+        }
+        .color-3{
+            color:#468847;
+            background:#dff0d8;
+            border-color:#d6e9c6;
+        }
+        .color-4{
+            color:#3a87ad;
+            background:#d9edf7;
+            border-color:#bce8f1;
+        }
+    </style>
+</head>
+<body ng-app="myApp" class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div ng-controller="todoCtrl">
+                <div class="todos">
+                    <h1>任务列表</h1>
+                    <form action="" ng-submit="addTodo()">
+                        <input type="text" ng-required="true"
+                               class="form-control" ng-model="todoText"
+                               placeholder="请输入账号">
+                        <label  ng-show="hasItem()">
+                            <input type="checkbox" ng-model="isDoneAll" ng-click="doneAll()">
+                              标记已读
+                        </label>
+                    </form>
+                    <!--todolist的标题-->
+                    <div ng-show="hasItem()">
+                        <div class="btn-toolbar">
+                            <div class="btn-group">
+                                <a href="" class="btn-sm" ng-click="predicate='text';
+                                reverse='!reverse'"
+                                >内容</a>
+                                <a href="" class="btn-sm" ng-click="predicate='time';
+                                   reverse='!reverse'"
+                                >时间</a>
+                                <a href="" class="btn-sm" ng-click="predicate='weight';
+                                   reverse='!reverse'"
+                                >权重</a>
+                                <a href="" class="btn-sm" ng-click="predicate='';
+                                   reverse='!reverse'"
+                                >默认</a>
+                            </div>
+                            <div class="btn-group">
+                                <a href="" class="btn btn-sm" ng-click="query='true'">已完成</a>
+                                <a href="" class="btn btn-sm" ng-click="query=false">未完成</a>
+                                <a href="" class="btn btn-sm" ng-click="query=''">全部</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!---->
+                    <div class="todo-list">
+                        <div ng-repeat="todo in todos">
+                            {{todo.text}}
+                            <ul class="list-unstyled color" ng-hide="todo.editing">
+                                <li ng-repeat="color in [4,3,2,1]" class="color-{{color}}" ng-click="todo.weight=color">
+                                {{todo.weight}}
+                                </li>
+                            </ul>
+                            <div class="alert color-{{todo.weight}} done-{{todo.done}}" ng-hide="todo.editing" ng-dblclick="startEditing(todo)">
+                                <button type="button" class="close"
+                                        ng-click="removeTodo(todo.id)"
+                                        data-dismiss="alert">&times;</button>
+                                <input type="checkbox"  ng-model="todo.done">
+                                <span class="todo-text">{{todo.text}}</span>
+                                <p class="pull-right">{{todo.time}}</p>
+                            </div>
+                            <form ng-submit="doneEditing(todo)" ng-show="todo.editing" action="">
+                                <input type="text" ng-blur="doneEditing(todo)"
+                                ng-focus="todo==editedItem"
+                                class="form-control"
+                                ng-model="todo.text"
+                                ng-required="true">
+                            </form>
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    var app=angular.module("myApp",[]);
+
+    /**
+    * $window是angular封装的window
+    **service为服务，但是为要谁服务的，要服务的对象是controlle
+     * */
+
+    app.service('locals',function($window){
+        //console.log($window);
+       //console.log(window);
+        return{
+            //设置localStorage
+            set:function(key,value){
+                    //设置localStorage的的
+                $window.localStorage[key]=JSON.stringify(value);
+            },
+            get:function(key){
+                return JSON.parse($window.localStorage[key]||"{}")
+            },
+            /*@tod */
+            remove:function(key){
+                $window.localStorage.removeItem(key)//删除数据库
+            },
+            length:$window.localStorage.length
+        }
+    });
+        app.controller("todoCtrl",function($scope,locals){
+           $scope.todos=[
+               //{id:1,text:"记得黛玉山",done:false,time:getNowTime(),weight:1},{
+             //   id:2,text:"记得带机械的键盘",done:false,time:getNowTime(),weight:1}
+    ];
+
+            for(var i=0;i<locals.length;i++){
+                //*再从数据库里面调出数据*/
+                $scope.todos.push(locals.get(i));
+            }
+$scope.startEditing=function(todo){
+    /*双击可以编辑的内容的*/
+    todo.editing=true;
+    $scope.editedItem=todo;
+};
+        /*标记已读的意思*/
+            $scope.doneAll=function(){
+                angular.forEach($scope.todos,function(todo){
+                    todo.done=$scope.isDoneAll;
+                })
+            };
+            /*点击提交
+            *
+            *
+            * */
+
+            $scope.doneEditing=function(todo){
+                /*点击提交改变下面值*/
+                todo.editing=false;
+                $scope.editedItem=null;
+                /*修改完成的数据存到数据库*/
+                locals.set(todo.id,{id
+                :todo.id ,text:todo.text,done:false,time:getNowTime(),weight:1})
+            };
+           /* locals.set('username','peter1');
+            locals.set('username2','peter2');
+            locals.set('username3','peter3');*/
+
+
+            $scope.addTodo=function(){
+               $scope.todos.push({
+                   id:$scope.todos.length,
+                   text:$scope.todoText,
+                   done:false,
+                   time:getNowTime(),
+                   weight:4,
+                  progress:0
+               });
+                $scope.todoText="";
+                locals.set($scope.todos[$scope.todos.length-1].id,$scope.todos[$scope.todos.length-1])
+            };
+         //   console.log(localStorage);
+            console.log(locals.length);
+
+            $scope.hasItem=function(){
+                //返回boolean
+                return $scope.todos.length>0;
+            };
+            $scope.removeTodo=function(todo){
+                locals.remove(todo);
+            }
+
+
+        });
+    function getNowTime(){
+        return new Date().toLocaleTimeString();
+    }
+app.directive("ngBlur",function(){
+    return function (scope,element,attrs){
+        element.bind('blur',function(){
+            alert(3333)
+        })
+
+    }
+})
+
+
+</script>
+</html>
